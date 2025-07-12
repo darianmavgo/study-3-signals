@@ -15,20 +15,28 @@ conn = sqlite3.connect('stock_data.db')
 # Fetch data
 data = {}
 for ticker in tickers:
+    loaded = False
     try:
         df = pd.read_sql(f'SELECT * FROM {ticker}', conn, index_col='Date', parse_dates=['Date'])
-        if not df.empty:
+        if not df.empty and ('Adj Close' in df.columns or 'Close' in df.columns):
             data[ticker] = df
-            continue
+            loaded = True
     except:
         pass
-    data[ticker] = yf.download(ticker, start=start_date, end=end_date)
-    data[ticker].to_sql(ticker, conn, if_exists='replace')
+    if not loaded:
+        data[ticker] = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False)
+        data[ticker].to_sql(ticker, conn, if_exists='replace')
 
 # Compute daily returns
 closes_list = []
 for ticker in tickers:
-    s = data[ticker]['Close']
+    df_t = data[ticker]
+    if 'Adj Close' in df_t.columns:
+        s = df_t['Adj Close']
+    elif 'Close' in df_t.columns:
+        s = df_t['Close']
+    else:
+        raise ValueError(f'No closing price column for {ticker}')
     s.name = ticker
     closes_list.append(s)
 closes = pd.concat(closes_list, axis=1)

@@ -3,10 +3,11 @@ import pandas as pd
 import sqlite3
 from datetime import datetime
 from sklearn.tree import DecisionTreeClassifier, export_text
+import joblib
 
 # Define tickers and dates
 tickers = ['BAR', 'SPY', 'BND', 'SPXL']
-start_date = '2021-01-01'
+start_date = '2020-01-01'
 end_date = '2025-07-10'
 
 # Create DB
@@ -55,6 +56,11 @@ y = df['target']
 # Fit decision tree
 dt = DecisionTreeClassifier(max_depth=3, min_samples_leaf=5, class_weight='balanced')
 dt.fit(X, y)
+
+# Save the trained model
+model_path = 'study 3 signals/decision_tree_model.joblib'
+joblib.dump(dt, model_path)
+print(f"Decision tree model saved to {model_path}")
 
 # Get probabilities
 probs = dt.predict_proba(X)
@@ -130,4 +136,4 @@ The high confidence days are stored in the database table 'high_confidence_days'
 with open('README.md', 'w') as f:
     f.write(readme)
 
-conn.close() 
+conn.close()
